@@ -1,0 +1,132 @@
+<!DOCTYPE html>    
+    <html>    
+    <head>    
+        <title>Quiz Tool</title>
+        <link rel="stylesheet" type="text/css" href="main-quiz-page-style.css">
+    </head>    
+    <body>    
+        <h2>Quiz Tool</h2><br>    
+        <div>    
+        <form>
+            Choose One for Each of the Following.
+            <br><br>
+            <a href='javascript:getQuestions()'> Click here to start the quiz</a>
+            <br><br>
+            <div id="quizDiv"></div>
+            <div id="feedbackDiv"></div>
+            <div id="gradeDiv"></div>
+        </form>     
+        </div>    
+    </body>    
+    <script>
+
+        var questionCounter1 = 0;
+        var questionCounter2 = 0;
+        var questionCounter3 = 0;
+
+        function getQuestions()
+        {   
+            let xReq = new XMLHttpRequest();
+            xReq.onreadystatechange = displayQuestions;
+
+            xReq.open('GET','/questionsInJson',true);
+            xReq.send();
+        }
+
+        function displayQuestions()
+        {
+            if (this.readyState == 4 && this.status == 200)
+            {
+                let quizDiv = document.getElementById('quizDiv');
+                let questionList = JSON.parse(this.responseText);
+                let content ='';
+                for (q of questionList)
+                {
+                    content += '<div>';
+                    content += `${questionCounter1 + 1}` + '. ' + q.stem;
+                    content += '<br><br>';
+                    for (var i = 0; i < q.options.length; i++)
+                    {
+                        content += `<input type="radio" name="question${q.stem}" id="${questionCounter1}${i}" value="${questionCounter1}${i}" onclick="getAnswers()">${q.options[i]}<br>`
+                    }
+                    questionCounter1 += 1;
+                    content += '<br><br>';
+                    content += '</div>';
+                }
+                content += '<input type="button" value="Submit" onclick="getScore()"><br><br>';
+                quizDiv.innerHTML = content;
+            }
+        }
+
+        function getAnswers()
+        {   
+            let xReq = new XMLHttpRequest();
+            xReq.onreadystatechange = checkAnswers;
+
+            xReq.open('GET','/questionsInJson',true);
+            xReq.send();
+        }
+
+        function checkAnswers()
+        {
+            if (this.readyState == 4 && this.status == 200)
+            {
+                let feedbackDiv = document.getElementById('feedbackDiv');
+                let questionList = JSON.parse(this.responseText);
+                let feedback ='<h3>Feedback</h3>';
+                questionCounter2 = 0;
+
+                for (q of questionList)
+                {
+                    if (document.getElementById(`${questionCounter2}${q.answerIndex}`).checked)
+                    {
+                        feedback += `${questionCounter2 + 1}` + '. ' + 'Answer Correct';
+                        feedback += '<br><br>';
+                    }
+                    else
+                    {
+                        feedback += `${questionCounter2 + 1}` + '. ' + 'Answer Incorrect';
+                        feedback += '<br><br>';
+                    }
+                    questionCounter2 += 1;
+                }
+
+                feedbackDiv.innerHTML = feedback; 
+            }
+            
+        }
+
+        function getScore()
+        {   
+            let xReq = new XMLHttpRequest();
+            xReq.onreadystatechange = checkScore;
+
+            xReq.open('GET','/questionsInJson',true);
+            xReq.send();
+        }
+
+        function checkScore()
+        {
+            if (this.readyState == 4 && this.status == 200)
+            {
+                let gradeDiv = document.getElementById('gradeDiv');
+                let questionList = JSON.parse(this.responseText);
+                let grade ='<h3>Grade</h3>';
+                let tempGrade = 0;
+                questionCounter3 = 0;
+
+                for (q of questionList)
+                {
+                    if (document.getElementById(`${questionCounter3}${q.answerIndex}`).checked)
+                    {
+                        tempGrade += 1;
+                    }
+                    questionCounter3 += 1;
+                }
+                grade += tempGrade + '/5';
+                gradeDiv.innerHTML = grade;
+            }
+        }
+
+    </script>
+</html> 
